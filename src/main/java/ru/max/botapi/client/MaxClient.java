@@ -20,6 +20,17 @@
 
 package ru.max.botapi.client;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.max.botapi.Version;
+import ru.max.botapi.client.impl.JacksonSerializer;
+import ru.max.botapi.client.impl.OkHttpTransportClient;
+import ru.max.botapi.exceptions.*;
+import ru.max.botapi.model.Error;
+import ru.max.botapi.queries.MaxQuery;
+import ru.max.botapi.queries.QueryParam;
+import ru.max.botapi.queries.upload.MaxUploadQuery;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -29,24 +40,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Future;
-
-import ru.max.botapi.Version;
-import ru.max.botapi.client.impl.JacksonSerializer;
-import ru.max.botapi.client.impl.OkHttpTransportClient;
-import ru.max.botapi.exceptions.APIException;
-import ru.max.botapi.exceptions.ClientException;
-import ru.max.botapi.exceptions.ExceptionMapper;
-import ru.max.botapi.exceptions.RequiredParameterMissingException;
-import ru.max.botapi.exceptions.SerializationException;
-import ru.max.botapi.exceptions.ServiceNotAvailableException;
-import ru.max.botapi.exceptions.TransportClientException;
-import ru.max.botapi.model.Error;
-import ru.max.botapi.queries.QueryParam;
-import ru.max.botapi.queries.MaxQuery;
-import ru.max.botapi.queries.upload.MaxUploadQuery;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MaxClient implements Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -106,19 +99,19 @@ public class MaxClient implements Closeable {
         try {
             switch (method) {
                 case GET:
-                    call = getTransport().get(url);
+                    call = getTransport().get(url, accessToken);
                     break;
                 case POST:
-                    call = getTransport().post(url, requestBody);
+                    call = getTransport().post(url, accessToken, requestBody);
                     break;
                 case PUT:
-                    call = getTransport().put(url, requestBody);
+                    call = getTransport().put(url, accessToken, requestBody);
                     break;
                 case DELETE:
-                    call = getTransport().delete(url);
+                    call = getTransport().delete(url, accessToken);
                     break;
                 case PATCH:
-                    call = getTransport().patch(url, requestBody);
+                    call = getTransport().patch(url, accessToken, requestBody);
                     break;
                 default:
                     throw new ClientException(400, "Method " + method.name() + " is not supported.");
@@ -147,9 +140,6 @@ public class MaxClient implements Closeable {
         } else {
             sb.append('&');
         }
-
-        sb.append("access_token=").append(getAccessToken());
-        sb.append('&');
         sb.append("v=").append(Version.get());
 
         List<QueryParam<?>> params = query.getParams();

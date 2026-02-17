@@ -1,36 +1,25 @@
 package ru.max.botapi.queries;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.HttpUrl;
+import org.jetbrains.annotations.NotNull;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import ru.max.botapi.client.ClientResponse;
+import ru.max.botapi.client.MaxClient;
+import ru.max.botapi.client.MaxTransportClient;
+import ru.max.botapi.exceptions.*;
+import ru.max.botapi.model.Error;
+import ru.max.botapi.model.User;
+import ru.max.botapi.server.MaxServer;
+import ru.max.botapi.server.MaxService;
+
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import org.jetbrains.annotations.NotNull;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import okhttp3.HttpUrl;
-import ru.max.botapi.client.ClientResponse;
-import ru.max.botapi.client.MaxClient;
-import ru.max.botapi.client.MaxSerializer;
-import ru.max.botapi.client.MaxTransportClient;
-import ru.max.botapi.exceptions.APIException;
-import ru.max.botapi.exceptions.AttachmentNotReadyException;
-import ru.max.botapi.exceptions.ChatAccessForbiddenException;
-import ru.max.botapi.exceptions.ClientException;
-import ru.max.botapi.exceptions.RequiredParameterMissingException;
-import ru.max.botapi.exceptions.SendMessageForbiddenException;
-import ru.max.botapi.exceptions.ServiceNotAvailableException;
-import ru.max.botapi.exceptions.TooManyRequestsException;
-import ru.max.botapi.exceptions.TransportClientException;
-import ru.max.botapi.model.Error;
-import ru.max.botapi.model.User;
-import ru.max.botapi.server.MaxServer;
-import ru.max.botapi.server.MaxService;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -185,10 +174,10 @@ public class MaxQueryTest extends UnitTestBase {
     @Test(expected = ClientException.class)
     public void shouldWrapTransportException() throws Exception {
         MaxTransportClient transport = mock(MaxTransportClient.class);
-        MaxSerializer serializer = mock(MaxSerializer.class);
-        when(transport.post(anyString(), any(byte[].class))).thenThrow(new TransportClientException("test exception"));
+        when(transport.post(anyString(), anyString(), any(byte[].class))).thenThrow(new TransportClientException("test exception"));
         MaxClient clientMock = new MaxClient(MaxService.ACCESS_TOKEN, transport, serializer);
-        new MaxQuery<>(clientMock, "/me", User.class, MaxTransportClient.Method.POST).execute();
+        User user = new User(1L, "name", "lastName", "userName", false, 0L);
+        new MaxQuery<>(clientMock, "/me", user, User.class, MaxTransportClient.Method.POST).execute();
     }
 
     @Test
@@ -216,11 +205,11 @@ public class MaxQueryTest extends UnitTestBase {
     @Test(expected = ClientException.class)
     public void shouldWrapInterruptedException() throws Exception {
         MaxTransportClient transport = mock(MaxTransportClient.class);
-        MaxSerializer serializer = mock(MaxSerializer.class);
-        when(transport.post(anyString(), any(byte[].class))).thenReturn(INTERRUPTING_FUTURE);
+        when(transport.post(anyString(), anyString(), any(byte[].class))).thenReturn(INTERRUPTING_FUTURE);
 
+        User user = new User(1L, "name", "lastName", "userName", false, 0L);
         MaxClient clientMock = new MaxClient(MaxService.ACCESS_TOKEN, transport, serializer);
-        new MaxQuery<>(clientMock, "/me", User.class, MaxTransportClient.Method.POST).execute();
+        new MaxQuery<>(clientMock, "/me", user, User.class, MaxTransportClient.Method.POST).execute();
     }
 
     @Test(expected = ClientException.class)

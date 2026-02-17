@@ -20,15 +20,15 @@
 
 package ru.max.botapi.queries.upload;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-
 import ru.max.botapi.client.MaxClient;
 import ru.max.botapi.exceptions.APIException;
 import ru.max.botapi.exceptions.ClientException;
 import ru.max.botapi.queries.MaxQuery;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public abstract class MaxUploadQuery<T> extends MaxQuery<T> {
     private final UploadExec uploadExec;
@@ -37,14 +37,14 @@ public abstract class MaxUploadQuery<T> extends MaxQuery<T> {
     public MaxUploadQuery(MaxClient maxClient, Class<T> responseType, String url, File file) {
         super(maxClient, url, responseType);
         this.maxClient = maxClient;
-        this.uploadExec = new FileUploadExec(url, file);
+        this.uploadExec = new FileUploadExec(url, maxClient.getAccessToken(), file);
     }
 
     public MaxUploadQuery(MaxClient maxClient, Class<T> responseType, String url, String fileName,
                           InputStream input) {
         super(maxClient, url, responseType);
         this.maxClient = maxClient;
-        this.uploadExec = new StreamUploadExec(url, fileName, input);
+        this.uploadExec = new StreamUploadExec(url, maxClient.getAccessToken(), fileName, input);
     }
 
     public UploadExec getUploadExec() {
